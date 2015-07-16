@@ -34,6 +34,8 @@ class StartScreen: public GameState{
         void HandleEvent(SDL_Event *e){
             if (e->type == SDL_KEYUP && e->key.keysym.sym == SDLK_RETURN){
                 stateFinished = true;
+            }else if (e->type == SDL_KEYUP && e->key.keysym.sym == SDLK_ESCAPE){
+                quit = true;
             }
         }
 

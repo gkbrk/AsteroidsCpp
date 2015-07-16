@@ -10,24 +10,41 @@
 #include <SDL2/SDL.h>
 #include <SDL2/SDL_image.h>
 #include <SDL2/SDL_ttf.h>
+#include <SDL2/SDL_mixer.h>
 
 #include "GameState.h"
 #include "StartScreen.h"
+#include "FrameAnimation.h"
 
 class AsteroidsGame: public GameState{
     public:
+        ~AsteroidsGame(){
+            delete explosion;
+        }
+
         void InitState(){
             frame = 0;
             score = 0;
             spaceshipPosition = 400;
             
+            hit = false;
+
             spaceship = IMG_Load("Sprites/spaceship2.png");
-            asteroid = IMG_Load("Sprites/asteroid1.png");
+            
+            asteroidSprites.push_back(IMG_Load("Sprites/asteroid1.png"));
+            asteroidSprites.push_back(IMG_Load("Sprites/asteroid2.png"));
 
             scoreFont = TTF_OpenFont("Fonts/Beon-Regular.ttf", 17);
             scoreColor = {255, 255, 255};
 
+            explosionSounds.push_back(Mix_LoadWAV("Sounds/explosion1.wav"));
+            backMusic = Mix_LoadMUS("Sounds/background1.wav");
 
+            if (!Mix_PlayingMusic()){
+                Mix_PlayMusic(backMusic, -1);
+            }
+
+            explosion = new FrameAnimation("Sprites/Explosion/explosion", 23, 1, 12);
         }
 
         static bool outsideScreen(std::pair<short, short> coords){
@@ -36,6 +53,10 @@ class AsteroidsGame: public GameState{
             }else{
                 return false;
             }
+        }
+
+        static bool asteroidOutsideScreen(std::tuple<short, short, short> asteroid){
+            return outsideScreen(std::make_pair(std::get<0>(asteroid), std::get<1>(asteroid)));
         }
 
         bool checkCollision(SDL_Rect rect1, SDL_Rect rect2){
@@ -54,7 +75,6 @@ class AsteroidsGame: public GameState{
             bottomB = rect2.y + rect2.h;
 
             //Detect collision
-
             if (bottomA <= topB || topA >= bottomB || rightA <= leftB || leftA >= rightB){
                 return false;
             }else{
@@ -72,14 +92,14 @@ class AsteroidsGame: public GameState{
         void Update(){
             frame++;
 
-            if (frame % 15 == 0){
+            if (frame % 15 == 0 && !hit){
                 score++;
                 std::ostringstream scoreStream;
                 scoreStream << "Score: " << score;
                 scoreText = TTF_RenderText_Solid(scoreFont, scoreStream.str().c_str(), scoreColor);
             }
 
-            if (frame % 8 == 0){
+            if (frame % 8 == 0 && !hit){
                 stars.erase(std::remove_if(stars.begin(), stars.end(), AsteroidsGame::outsideScreen), stars.end()); // Remove old stars.
 
                 int star_pos = rng()%800;
@@ -87,18 +107,22 @@ class AsteroidsGame: public GameState{
             }
 
             for (int i=0;i<stars.size();i++){
-                stars[i].second += 3;
+                if (!hit){
+                    stars[i].second += 3;
+                }
             }
 
-            if (frame % 125 == 0){
-                asteroids.erase(std::remove_if(asteroids.begin(), asteroids.end(), AsteroidsGame::outsideScreen), asteroids.end()); // Remove old asteroids.
+            if (frame % 125 == 0 && !hit){
+                asteroids.erase(std::remove_if(asteroids.begin(), asteroids.end(), AsteroidsGame::asteroidOutsideScreen), asteroids.end()); // Remove old asteroids.
 
                 int asteroidPos = rng() % 800;
-                asteroids.push_back(std::make_pair(asteroidPos, -40));
+                asteroids.push_back(std::make_tuple(asteroidPos, -40, rng()%2));
             }
 
             for (int i=0;i<asteroids.size();i++){
-                asteroids[i].second += 1;
+                if (!hit){
+                    std::get<1>(asteroids[i]) += 2;
+                }
 
                 SDL_Rect spaceship;
                 SDL_Rect asteroid;
@@ -107,13 +131,19 @@ class AsteroidsGame: public GameState{
                 spaceship.w = 50;
                 spaceship.h = 69;
 
-                asteroid.x = asteroids[i].first;
-                asteroid.y = asteroids[i].second;
+                asteroid.x = std::get<0>(asteroids[i]);
+                asteroid.y = std::get<1>(asteroids[i]);
                 asteroid.w = 45;
                 asteroid.h = 63;
                 if (checkCollision(spaceship, asteroid)){
+                    hit = true;
+                    explosion->Start();
                     states->push_back(new StartScreen());
                     states->push_back(new AsteroidsGame());
+                    Mix_PlayChannel(-1, explosionSounds[0], 0);
+                }
+
+                if (hit && explosion->done){
                     stateFinished = true;
                 }
             }
@@ -132,15 +162,19 @@ class AsteroidsGame: public GameState{
             
             for (int i=0;i<asteroids.size();i++){
                 SDL_Rect asteroid_rect;
-                asteroid_rect.x = asteroids[i].first;
-                asteroid_rect.y = asteroids[i].second;
-                SDL_BlitSurface(asteroid, NULL, surface, &asteroid_rect);
+                asteroid_rect.x = std::get<0>(asteroids[i]);
+                asteroid_rect.y = std::get<1>(asteroids[i]);
+                SDL_BlitSurface(asteroidSprites[std::get<2>(asteroids[i])], NULL, surface, &asteroid_rect);
             }
+
+            explosion->Update();
 
             SDL_Rect spaceship_rect;
             spaceship_rect.x = spaceshipPosition - 25;
             spaceship_rect.y = 500;
             SDL_BlitSurface(spaceship, NULL, surface, &spaceship_rect);
+            
+            explosion->Draw(surface, (spaceshipPosition - 40), 500);
 
             SDL_Rect scoreRect;
             scoreRect.x = 5;
@@ -149,14 +183,18 @@ class AsteroidsGame: public GameState{
             SDL_UpdateWindowSurface(window);
         }
         std::vector<std::pair<short, short>> stars;
-        std::vector<std::pair<short, short>> asteroids;
+        std::vector<std::tuple<short, short, short>> asteroids;
+        std::vector<Mix_Chunk*> explosionSounds;
+        Mix_Music *backMusic;
         std::default_random_engine rng;
         SDL_Surface *spaceship;
-        SDL_Surface *asteroid;
+        std::vector<SDL_Surface*> asteroidSprites;
+        FrameAnimation *explosion;
         long frame;
         long score;
         SDL_Surface *scoreText;
         TTF_Font *scoreFont;
         SDL_Color scoreColor;
         int spaceshipPosition;
+        bool hit;
 };

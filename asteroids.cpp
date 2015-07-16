@@ -5,6 +5,7 @@
 #include <SDL2/SDL.h>
 #include <SDL2/SDL_image.h>
 #include <SDL2/SDL_ttf.h>
+#include <SDL2/SDL_mixer.h>
 
 #include "GameState.h"
 #include "SplashScreen.h"
@@ -15,7 +16,7 @@ SDL_Window *window = NULL;
 SDL_Surface *surface = NULL;
 
 bool init_sdl(){
-    if (SDL_Init(SDL_INIT_VIDEO) != 0){
+    if (SDL_Init(SDL_INIT_VIDEO | SDL_INIT_AUDIO) != 0){
         return false;
     }else{
         window = SDL_CreateWindow("Asteroids", SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED, 800, 600, SDL_WINDOW_SHOWN);
@@ -36,12 +37,14 @@ int main(){
     if (init_sdl()){
         IMG_Init(IMG_INIT_PNG);
         TTF_Init();
+        Mix_OpenAudio(MIX_DEFAULT_FREQUENCY, MIX_DEFAULT_FORMAT, MIX_DEFAULT_CHANNELS, 2048);
 
         while (gameStates.size() > 0){
             GameState *state = gameStates.front();
             gameStates.pop_front();
 
             state->stateFinished = false;
+            state->quit = false;
             state->window = window;
             state->surface = surface;
             state->states = &gameStates;
@@ -55,6 +58,10 @@ int main(){
                         state->stateFinished = true;
                     }
                     state->HandleEvent(&e);
+                }
+                if (state->quit){
+                    gameStates.clear();
+                    state->stateFinished = true;
                 }
                 state->Update();
                 state->Draw();

@@ -18,11 +18,10 @@ class SplashScreen: public GameState{
 
         void InitState(){
             frame = 0;
-            totalFrames = 500;
+            totalFrames = 150;
 
             images.push_back(IMG_Load("SplashScreen/0.png"));
             images.push_back(IMG_Load("SplashScreen/1.png"));
-            images.push_back(IMG_Load("SplashScreen/2.png"));
             images.push_back(IMG_Load("SplashScreen/3.png"));
         }
 
