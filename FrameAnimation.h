@@ -17,8 +17,6 @@ class FrameAnimation{
             loops = 1;
             done = false;
             started = false;
-
-            std::cout << "New FrameAnimation" << std::endl;
         }
 
         FrameAnimation(std::string path, int frameCount): FrameAnimation(){

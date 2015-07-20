@@ -24,6 +24,11 @@ bool init_sdl(){
             return false;
         }else{
             surface = SDL_GetWindowSurface(window);
+            
+            IMG_Init(IMG_INIT_PNG);
+            TTF_Init();
+            Mix_OpenAudio(MIX_DEFAULT_FREQUENCY, MIX_DEFAULT_FORMAT, MIX_DEFAULT_CHANNELS, 2048);
+            
             return true;
         }
     }
@@ -35,10 +40,6 @@ int main(){
     gameStates.push_back(new StartScreen());
     gameStates.push_back(new AsteroidsGame());
     if (init_sdl()){
-        IMG_Init(IMG_INIT_PNG);
-        TTF_Init();
-        Mix_OpenAudio(MIX_DEFAULT_FREQUENCY, MIX_DEFAULT_FORMAT, MIX_DEFAULT_CHANNELS, 2048);
-
         while (gameStates.size() > 0){
             GameState *state = gameStates.front();
             gameStates.pop_front();
@@ -73,4 +74,6 @@ int main(){
         std::cerr << "Failed to initialize SDL." << std::endl;
     }
     SDL_Quit();
+
+    return 0;
 }
