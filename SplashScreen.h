@@ -45,8 +45,7 @@ class SplashScreen: public GameState{
 
             SDL_SetSurfaceBlendMode(images[currentImage], SDL_BLENDMODE_BLEND);
             SDL_SetSurfaceAlphaMod(images[currentImage], alpha);
-            SDL_BlitSurface(images[currentImage], NULL, surface, NULL);
-            SDL_UpdateWindowSurface(window);
+            SDL_BlitSurface(images[currentImage], NULL, Helpers::surface, NULL);
         }
 
         std::vector<SDL_Surface*> images;

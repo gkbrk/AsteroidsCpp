@@ -7,23 +7,22 @@
 #include <SDL2/SDL_ttf.h>
 #include <SDL2/SDL_mixer.h>
 
+#include "Helpers.h"
+#include "SoundStore.h"
 #include "GameState.h"
 #include "SplashScreen.h"
 #include "StartScreen.h"
 #include "AsteroidsGame.h"
 
-SDL_Window *window = NULL;
-SDL_Surface *surface = NULL;
-
 bool init_sdl(){
     if (SDL_Init(SDL_INIT_VIDEO | SDL_INIT_AUDIO) != 0){
         return false;
     }else{
-        window = SDL_CreateWindow("Asteroids", SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED, 800, 600, SDL_WINDOW_SHOWN);
-        if (window == NULL){
+        Helpers::window = SDL_CreateWindow("Asteroids", SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED, 800, 600, SDL_WINDOW_SHOWN);
+        if (Helpers::window == NULL){
             return false;
         }else{
-            surface = SDL_GetWindowSurface(window);
+            Helpers::surface = SDL_GetWindowSurface(Helpers::window);
             
             IMG_Init(IMG_INIT_PNG);
             TTF_Init();
@@ -46,8 +45,6 @@ int main(){
 
             state->stateFinished = false;
             state->quit = false;
-            state->window = window;
-            state->surface = surface;
             state->states = &gameStates;
 
             state->InitState();
@@ -66,10 +63,11 @@ int main(){
                 }
                 state->Update();
                 state->Draw();
+                SDL_UpdateWindowSurface(Helpers::window);
             }
             delete state;
         }
-        SDL_DestroyWindow(window);
+        SDL_DestroyWindow(Helpers::window);
     }else{
         std::cerr << "Failed to initialize SDL." << std::endl;
     }

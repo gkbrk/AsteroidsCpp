@@ -6,15 +6,32 @@
 #include <SDL2/SDL.h>
 #include <SDL2/SDL_image.h>
 
+#include "Helpers.h"
+
+using namespace Helpers;
+
 class Sprite{
     public:
-        Sprite(std::string path, int x, int y){
+        Sprite(){
+            #ifdef DEBUGMODE
+                std::cout << "Created new Sprite." << std::endl;
+            #endif
+        }
+
+        Sprite(std::string path): Sprite(){
             image = IMG_Load(path.c_str());
-            position.first = x;
-            position.second = y;
 
             width = image->w;
             height = image->h;
+        }
+
+        Sprite(std::string path, int x, int y): Sprite(path){
+            position.first = x;
+            position.second = y;
+        }
+
+        ~Sprite(){
+            SDL_FreeSurface(image);
         }
 
         virtual void InitSprite() {}
@@ -23,16 +40,12 @@ class Sprite{
             SDL_Rect spriteRect;
             spriteRect.x = position.first;
             spriteRect.y = position.second;
-            SDL_BlitSurface(image, NULL, surface, &spriteRect);
+            SDL_BlitSurface(image, NULL, Helpers::surface, &spriteRect);
         }
 
         void SetPosition(int x, int y){
             position.first = x;
             position.second = y;
-        }
-
-        void SetSurface(SDL_Surface *surface){
-            this->surface = surface;
         }
 
         bool collidesWith(SDL_Rect otherObject){
@@ -82,7 +95,6 @@ class Sprite{
 
         }
 
-        SDL_Surface *surface;
         SDL_Surface *image;
         std::pair<int, int> position;
 

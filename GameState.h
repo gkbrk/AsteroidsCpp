@@ -15,7 +15,5 @@ class GameState{
         bool stateFinished;
         bool gotoNext;
         bool quit;
-        SDL_Window *window;
-        SDL_Surface *surface;
         std::list<GameState*> *states;
 };

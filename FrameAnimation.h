@@ -8,6 +8,8 @@
 #include <SDL2/SDL.h>
 #include <SDL2/SDL_image.h>
 
+using namespace Helpers;
+
 class FrameAnimation{
     public:
         FrameAnimation(){
@@ -64,7 +66,7 @@ class FrameAnimation{
                 SDL_Rect rect;
                 rect.x = x;
                 rect.y = y;
-                SDL_BlitSurface(frames[animationFrame], NULL, surface, &rect);
+                SDL_BlitSurface(frames[animationFrame], NULL, Helpers::surface, &rect);
             }
         }
 

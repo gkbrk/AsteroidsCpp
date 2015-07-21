@@ -69,21 +69,20 @@ class StartScreen: public GameState{
         }
 
         void Draw(){
-            SDL_FillRect(surface, NULL, SDL_MapRGB(surface->format, 0, 0, 0));
+            SDL_FillRect(Helpers::surface, NULL, SDL_MapRGB(Helpers::surface->format, 0, 0, 0));
             for (int i=0;i<stars.size();i++){
                 SDL_Rect star_rect;
                 star_rect.x = stars[i].first;
                 star_rect.y = stars[i].second;
                 star_rect.w = 4;
                 star_rect.h = 4;
-                SDL_FillRect(surface, &star_rect, SDL_MapRGB(surface->format, 255, 255, 255));
+                SDL_FillRect(Helpers::surface, &star_rect, SDL_MapRGB(Helpers::surface->format, 255, 255, 255));
             }
 
             SDL_Rect textRect;
             textRect.x = 170;
             textRect.y = 300 + textPosition;
-            SDL_BlitSurface(start_text, NULL, surface, &textRect);
-            SDL_UpdateWindowSurface(window);
+            SDL_BlitSurface(start_text, NULL, Helpers::surface, &textRect);
         }
 
         std::vector<std::pair<short, short>> stars;

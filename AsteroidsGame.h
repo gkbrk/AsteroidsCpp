@@ -15,6 +15,7 @@
 
 #include "Helpers.h"
 #include "Sprite.h"
+#include "AnimatedSprite.h"
 #include "GameState.h"
 #include "StartScreen.h"
 #include "FrameAnimation.h"
@@ -30,6 +31,8 @@ class AsteroidsGame: public GameState{
                 SDL_FreeSurface(asteroidSprites[i]);
             }
 
+            Mix_FreeMusic(backMusic);
+
             Helpers::setHighScore(highscore);
         }
 
@@ -41,8 +44,7 @@ class AsteroidsGame: public GameState{
 
             rng.seed(time(NULL));
 
-            spaceship = new Sprite("Sprites/spaceship2.png", 400, 500);
-            spaceship->SetSurface(surface);
+            spaceship = new AnimatedSprite("Sprites/Spaceship/spaceship", 38, 20, 400, 500);
             
             asteroidSpritePaths.push_back("Sprites/asteroid1.png");
             asteroidSpritePaths.push_back("Sprites/asteroid2.png");
@@ -51,15 +53,15 @@ class AsteroidsGame: public GameState{
             scoreFont = TTF_OpenFont("Fonts/Beon-Regular.ttf", 17);
             scoreColor = {255, 255, 255};
 
-            explosionSounds.push_back(Mix_LoadWAV("Sounds/explosion1.wav"));
-            backMusic = Mix_LoadMUS("Sounds/background1.wav");
+            SoundStore::LoadSoundIfNotLoaded("Sounds/explosion1.wav", "explosion");
+            SoundStore::LoadMusicIfNotLoaded("Sounds/background1.wav", "background");
 
             if (!Mix_PlayingMusic()){
-                Mix_PlayMusic(backMusic, -1);
+                Mix_PlayMusic(SoundStore::GetMusic("background"), -1);
             }
 
-            explosion = new FrameAnimation("Sprites/Explosion/explosion", 23, 1, 12);
-            flame = new FrameAnimation("Sprites/Flame/flame", 4, -1, 30);
+            explosion = new FrameAnimation("Sprites/Explosion/explosion", 23, 1, 9);
+            flame = new FrameAnimation("Sprites/Flame/flame", 4, -1, 15);
             flame->Start();
 
             highscore = Helpers::getHighScore();
@@ -125,7 +127,6 @@ class AsteroidsGame: public GameState{
 
                 int asteroidPos = rng() % 800;
                 Sprite *asteroid = new Sprite(asteroidSpritePaths[rng()%asteroidSpritePaths.size()], asteroidPos, -40);
-                asteroid->SetSurface(surface);
                 asteroids.push_back(asteroid);
             }
 
@@ -139,7 +140,7 @@ class AsteroidsGame: public GameState{
                     explosion->Start();
                     states->push_back(new StartScreen());
                     states->push_back(new AsteroidsGame());
-                    Mix_PlayChannel(-1, explosionSounds[0], 0);
+                    Mix_PlayChannel(-1, SoundStore::GetSound("explosion"), 0);
                 }
 
                 if (hit && explosion->done){
@@ -147,19 +148,20 @@ class AsteroidsGame: public GameState{
                 }
             }
 
+            spaceship->Update();
             explosion->Update();
             flame->Update();
         }
 
         void Draw(){
-            SDL_FillRect(surface, NULL, SDL_MapRGB(surface->format, 0, 0, 0));
+            SDL_FillRect(Helpers::surface, NULL, SDL_MapRGB(Helpers::surface->format, 0, 0, 0));
             for (int i=0;i<stars.size();i++){
                 SDL_Rect star_rect;
                 star_rect.x = stars[i].first;
                 star_rect.y = stars[i].second;
                 star_rect.w = 4;
                 star_rect.h = 4;
-                SDL_FillRect(surface, &star_rect, SDL_MapRGB(surface->format, 255, 255, 255));
+                SDL_FillRect(Helpers::surface, &star_rect, SDL_MapRGB(Helpers::surface->format, 255, 255, 255));
             }
             
             for (int i=0;i<asteroids.size();i++){
@@ -168,27 +170,24 @@ class AsteroidsGame: public GameState{
 
             spaceship->Draw();
             
-            explosion->Draw(surface, (spaceship->position.first-10), 500);
+            explosion->Draw(Helpers::surface, (spaceship->position.first-10), 500);
 
-            flame->Draw(surface, (spaceship->position.first), 560);
+            flame->Draw(Helpers::surface, (spaceship->position.first), 560);
 
             SDL_Rect scoreRect;
             scoreRect.x = 5;
             scoreRect.y = 5;
-            SDL_BlitSurface(scoreText, NULL, surface, &scoreRect);
+            SDL_BlitSurface(scoreText, NULL, Helpers::surface, &scoreRect);
 
             scoreRect.y = 25;
-            SDL_BlitSurface(highScoreText, NULL, surface, &scoreRect);
-
-            SDL_UpdateWindowSurface(window);
+            SDL_BlitSurface(highScoreText, NULL, Helpers::surface, &scoreRect);
         }
         std::vector<std::pair<short, short>> stars;
         std::vector<Sprite*> asteroids;
         std::vector<std::string> asteroidSpritePaths;
-        std::vector<Mix_Chunk*> explosionSounds;
         Mix_Music *backMusic;
         std::default_random_engine rng;
-        Sprite *spaceship;
+        AnimatedSprite *spaceship;
         std::vector<SDL_Surface*> asteroidSprites;
         FrameAnimation *explosion;
         FrameAnimation *flame;
