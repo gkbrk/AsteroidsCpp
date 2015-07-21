@@ -1,6 +1,7 @@
 #pragma once
 
 #include <vector>
+#include <sstream>
 #include <iostream>
 
 #include <SDL2/SDL.h>
@@ -16,13 +17,18 @@ class SplashScreen: public GameState{
             }
         }
 
-        void InitState(){
+        SplashScreen(){
             frame = 0;
-            totalFrames = 250;
+            totalFrames = 200;
+        }
 
-            images.push_back(IMG_Load("SplashScreen/0.png"));
-            images.push_back(IMG_Load("SplashScreen/1.png"));
-            images.push_back(IMG_Load("SplashScreen/2.png"));
+        SplashScreen(std::string path, int imageCount, int totalframes) :SplashScreen(){
+            this->totalFrames = totalframes;
+            for (int i=0;i<imageCount;i++){
+                std::ostringstream imagePath;
+                imagePath << path << i << ".png";
+                images.push_back(IMG_Load(imagePath.str().c_str()));
+            }
         }
 
         void Update(){

@@ -44,9 +44,9 @@ class AsteroidsGame: public GameState{
             spaceship = new Sprite("Sprites/spaceship2.png", 400, 500);
             spaceship->SetSurface(surface);
             
-            asteroidSprites.push_back(IMG_Load("Sprites/asteroid1.png"));
-            asteroidSprites.push_back(IMG_Load("Sprites/asteroid2.png"));
-            asteroidSprites.push_back(IMG_Load("Sprites/asteroid3.png"));
+            asteroidSpritePaths.push_back("Sprites/asteroid1.png");
+            asteroidSpritePaths.push_back("Sprites/asteroid2.png");
+            asteroidSpritePaths.push_back("Sprites/asteroid3.png");
 
             scoreFont = TTF_OpenFont("Fonts/Beon-Regular.ttf", 17);
             scoreColor = {255, 255, 255};
@@ -73,31 +73,8 @@ class AsteroidsGame: public GameState{
             }
         }
 
-        static bool asteroidOutsideScreen(std::tuple<short, short, short> asteroid){
-            return outsideScreen(std::make_pair(std::get<0>(asteroid), std::get<1>(asteroid)));
-        }
-
-        bool checkCollision(SDL_Rect rect1, SDL_Rect rect2){
-            int leftA, leftB, rightA, rightB, topA, topB, bottomA, bottomB;
-
-            //Sides of rect1
-            leftA = rect1.x;
-            rightA = rect1.x + rect1.w;
-            topA = rect1.y;
-            bottomA = rect1.y + rect1.h;
-
-            //Sides of rect2
-            leftB = rect2.x;
-            rightB = rect2.x + rect2.w;
-            topB = rect2.y;
-            bottomB = rect2.y + rect2.h;
-
-            //Detect collision
-            if (bottomA <= topB || topA >= bottomB || rightA <= leftB || leftA >= rightB){
-                return false;
-            }else{
-                return true;
-            }
+        static bool asteroidOutsideScreen(Sprite *asteroid){
+            return outsideScreen(std::make_pair(asteroid->position.first, asteroid->position.second));
         }
 
         void HandleEvent(SDL_Event *e){
@@ -105,7 +82,7 @@ class AsteroidsGame: public GameState{
                 int x, y;
                 SDL_GetMouseState(&x, &y);
 
-                spaceship->SetPosition((x-spaceship->width), y);
+                spaceship->SetPosition((x-spaceship->width/2), 500);
             }
         }
 
@@ -147,20 +124,17 @@ class AsteroidsGame: public GameState{
                 asteroids.erase(std::remove_if(asteroids.begin(), asteroids.end(), AsteroidsGame::asteroidOutsideScreen), asteroids.end()); // Remove old asteroids.
 
                 int asteroidPos = rng() % 800;
-                asteroids.push_back(std::make_tuple(asteroidPos, -40, rng()%3));
+                Sprite *asteroid = new Sprite(asteroidSpritePaths[rng()%asteroidSpritePaths.size()], asteroidPos, -40);
+                asteroid->SetSurface(surface);
+                asteroids.push_back(asteroid);
             }
 
             for (int i=0;i<asteroids.size();i++){
                 if (!hit){
-                    std::get<1>(asteroids[i]) += 1;
+                    asteroids[i]->position.second += 1;
                 }
 
-                SDL_Rect asteroid;
-                asteroid.x = std::get<0>(asteroids[i]);
-                asteroid.y = std::get<1>(asteroids[i]);
-                asteroid.w = 45;
-                asteroid.h = 63;
-                if (spaceship->collidesWith(asteroid) && !hit){
+                if (spaceship->collidesWith(asteroids[i]) && !hit){
                     hit = true;
                     explosion->Start();
                     states->push_back(new StartScreen());
@@ -189,17 +163,14 @@ class AsteroidsGame: public GameState{
             }
             
             for (int i=0;i<asteroids.size();i++){
-                SDL_Rect asteroid_rect;
-                asteroid_rect.x = std::get<0>(asteroids[i]);
-                asteroid_rect.y = std::get<1>(asteroids[i]);
-                SDL_BlitSurface(asteroidSprites[std::get<2>(asteroids[i])], NULL, surface, &asteroid_rect);
+                asteroids[i]->Draw();
             }
 
             spaceship->Draw();
             
-            explosion->Draw(surface, (spaceship->position.first - 40), 500);
+            explosion->Draw(surface, (spaceship->position.first-10), 500);
 
-            flame->Draw(surface, (spaceship->position.first - spaceship->width/2 + 5), 560);
+            flame->Draw(surface, (spaceship->position.first), 560);
 
             SDL_Rect scoreRect;
             scoreRect.x = 5;
@@ -212,7 +183,8 @@ class AsteroidsGame: public GameState{
             SDL_UpdateWindowSurface(window);
         }
         std::vector<std::pair<short, short>> stars;
-        std::vector<std::tuple<short, short, short>> asteroids;
+        std::vector<Sprite*> asteroids;
+        std::vector<std::string> asteroidSpritePaths;
         std::vector<Mix_Chunk*> explosionSounds;
         Mix_Music *backMusic;
         std::default_random_engine rng;

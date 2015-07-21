@@ -58,6 +58,30 @@ class Sprite{
             }
         }
 
+        bool collidesWith(Sprite *other){
+            int leftA, rightA, topA, bottomA, leftB, rightB, topB, bottomB;
+
+            //Sides of first sprite
+            leftA = position.first;
+            rightA = position.first + width;
+            topA = position.second;
+            bottomA = position.second + height;
+
+            //Sides of second sprite
+            leftB = other->position.first;
+            rightB = other->position.first + other->width;
+            topB = other->position.second;
+            bottomB = other->position.second + other->height;
+
+            //Detect collision
+            if (bottomA <= topB || topA >= bottomB || rightA <= leftB || leftA >= rightB){
+                return false;
+            }else{
+                return true;
+            }
+
+        }
+
         SDL_Surface *surface;
         SDL_Surface *image;
         std::pair<int, int> position;

@@ -36,7 +36,7 @@ bool init_sdl(){
 
 int main(){
     std::list<GameState*> gameStates;
-    gameStates.push_back(new SplashScreen());
+    gameStates.push_back(new SplashScreen("SplashScreen/", 3, 250));
     gameStates.push_back(new StartScreen());
     gameStates.push_back(new AsteroidsGame());
     if (init_sdl()){
