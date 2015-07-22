@@ -17,6 +17,7 @@
 #include "Helpers.h"
 #include "Sprite.h"
 #include "AnimatedSprite.h"
+#include "Text.h"
 #include "GameState.h"
 #include "StartScreen.h"
 #include "FrameAnimation.h"
@@ -26,7 +27,9 @@ class AsteroidsGame: public GameState{
         ~AsteroidsGame(){
             delete explosion;
             delete flame;
-            SDL_FreeSurface(scoreText);
+
+            delete scoreText;
+            delete highScoreText;
             
             for (int i=0;i<asteroidSprites.size();i++){
                 SDL_FreeSurface(asteroidSprites[i]);
@@ -51,9 +54,6 @@ class AsteroidsGame: public GameState{
             asteroidSpritePaths.push_back("Sprites/asteroid2.png");
             asteroidSpritePaths.push_back("Sprites/asteroid3.png");
 
-            scoreFont = TTF_OpenFont("Fonts/Beon-Regular.ttf", 17);
-            scoreColor = {255, 255, 255};
-
             SoundStore::LoadSoundIfNotLoaded("Sounds/explosion1.wav", "explosion");
             SoundStore::LoadMusicIfNotLoaded("Sounds/hb_starter_fantasy_battle.wav", "background");
 
@@ -66,6 +66,9 @@ class AsteroidsGame: public GameState{
             flame->Start();
 
             highscore = Helpers::getHighScore();
+
+            scoreText = new Text("Fonts/Beon-Regular.ttf", 17);
+            highScoreText = new Text("Fonts/Beon-Regular.ttf", 17);
         }
 
         static bool outsideScreen(std::pair<short, short> coords){
@@ -110,13 +113,11 @@ class AsteroidsGame: public GameState{
 
                 std::ostringstream scoreStream;
                 scoreStream << "Score: " << (int)score;
-                SDL_FreeSurface(scoreText);
-                scoreText = TTF_RenderText_Solid(scoreFont, scoreStream.str().c_str(), scoreColor);
+                scoreText->SetText(scoreStream.str());
 
                 std::ostringstream highScoreStream;
                 highScoreStream << "High-score: " << highscore;
-                SDL_FreeSurface(highScoreText);
-                highScoreText = TTF_RenderText_Solid(scoreFont, highScoreStream.str().c_str(), scoreColor);
+                highScoreText->SetText(highScoreStream.str());
             }
 
             if (frame % 8 == 0 && !hit){
@@ -182,13 +183,8 @@ class AsteroidsGame: public GameState{
             flame->Draw(Helpers::surface, (spaceship->position.first), 560);
             explosion->Draw(Helpers::surface, (spaceship->position.first-10), 500);
 
-            SDL_Rect scoreRect;
-            scoreRect.x = 5;
-            scoreRect.y = 5;
-            SDL_BlitSurface(scoreText, NULL, Helpers::surface, &scoreRect);
-
-            scoreRect.y = 25;
-            SDL_BlitSurface(highScoreText, NULL, Helpers::surface, &scoreRect);
+            scoreText->Draw(5, 5);
+            highScoreText->Draw(5, 25);
         }
         std::vector<std::pair<double, double>> stars;
         std::vector<std::shared_ptr<Sprite>> asteroids;
@@ -199,12 +195,10 @@ class AsteroidsGame: public GameState{
         std::vector<SDL_Surface*> asteroidSprites;
         FrameAnimation *explosion;
         FrameAnimation *flame;
+        Text *scoreText;
+        Text *highScoreText;
         long frame;
         double score;
         long highscore;
-        SDL_Surface *scoreText;
-        SDL_Surface *highScoreText;
-        TTF_Font *scoreFont;
-        SDL_Color scoreColor;
         bool hit;
 };

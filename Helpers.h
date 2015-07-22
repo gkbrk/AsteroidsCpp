@@ -5,7 +5,7 @@
 #include <SDL2/SDL.h>
 
 namespace Helpers{
-    static void setHighScore(long score){
+    void setHighScore(long score){
         std::ofstream scoreFile;
         scoreFile.open("highscore");
 
@@ -13,7 +13,7 @@ namespace Helpers{
         scoreFile.close();
     }
 
-    static long getHighScore(){
+    long getHighScore(){
         long score;
         std::ifstream scoreFile;
         scoreFile.open("highscore");
@@ -27,7 +27,7 @@ namespace Helpers{
         return score;
     }
 
-    static SDL_Window *window;
-    static SDL_Surface *surface;
-    static bool menuMusicPlayed = false;
+    SDL_Window *window;
+    SDL_Surface *surface;
+    bool menuMusicPlayed = false;
 }

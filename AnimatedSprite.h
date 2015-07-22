@@ -12,6 +12,8 @@ using namespace Helpers;
 
 class AnimatedSprite: public Sprite{
     public:
+        AnimatedSprite(){}
+
         AnimatedSprite(std::string path, int frameCount, int updatesPerFrame){
             frame = 0;
             currentFrame = 0;

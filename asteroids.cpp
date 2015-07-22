@@ -39,6 +39,8 @@ int main(){
     gameStates.push_back(new SplashScreen("SplashScreen/", 3, 500));
     gameStates.push_back(new StartScreen());
     gameStates.push_back(new AsteroidsGame());
+
+    double smoothTime = 0;
     if (init_sdl()){
         while (gameStates.size() > 0){
             GameState *state = gameStates.front();

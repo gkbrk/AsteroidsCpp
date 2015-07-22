@@ -9,6 +9,7 @@
 #include <SDL2/SDL_ttf.h>
 
 #include "GameState.h"
+#include "Text.h"
 
 class StartScreen: public GameState{
     public:
@@ -23,10 +24,8 @@ class StartScreen: public GameState{
                 Helpers::menuMusicPlayed = true;
             }
 
-            TTF_Font *font1 = TTF_OpenFont("Fonts/Amburegul.ttf", 24);
-            SDL_Color textColor = {255, 255, 255};
-
-            start_text = TTF_RenderText_Solid(font1, "Press ENTER to start the game", textColor);
+            startText = new Text("Fonts/Amburegul.ttf", 24);
+            startText->SetText("Press ENTER to start the game");
         }
         
         static bool outsideScreen(std::pair<short, short> coords){
@@ -85,15 +84,12 @@ class StartScreen: public GameState{
                 SDL_FillRect(Helpers::surface, &star_rect, SDL_MapRGB(Helpers::surface->format, 255, 255, 255));
             }
 
-            SDL_Rect textRect;
-            textRect.x = 170;
-            textRect.y = 300 + textPosition;
-            SDL_BlitSurface(start_text, NULL, Helpers::surface, &textRect);
+            startText->Draw(170, 300 + textPosition);
         }
 
         std::vector<std::pair<double, double>> stars;
         std::default_random_engine rng;
-        SDL_Surface *start_text;
+        Text *startText;
         long frame;
         double textPosition;
         bool textDown;
