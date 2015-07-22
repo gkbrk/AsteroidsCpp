@@ -100,15 +100,14 @@ class AsteroidsGame: public GameState{
                 Mix_PlayMusic(SoundStore::GetMusic("background"), -1);
             }
 
+            score += dt * 30;
             if (frame % 15 == 0 && !hit){
-                score++;
-
                 if (score > highscore){
-                    highscore = score;
+                    highscore = (int)score;
                 }
 
                 std::ostringstream scoreStream;
-                scoreStream << "Score: " << score;
+                scoreStream << "Score: " << (int)score;
                 SDL_FreeSurface(scoreText);
                 scoreText = TTF_RenderText_Solid(scoreFont, scoreStream.str().c_str(), scoreColor);
 
@@ -199,7 +198,7 @@ class AsteroidsGame: public GameState{
         FrameAnimation *explosion;
         FrameAnimation *flame;
         long frame;
-        long score;
+        double score;
         long highscore;
         SDL_Surface *scoreText;
         SDL_Surface *highScoreText;
