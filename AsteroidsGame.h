@@ -7,6 +7,7 @@
 #include <sstream>
 #include <iostream>
 #include <ctime>
+#include <memory>
 
 #include <SDL2/SDL.h>
 #include <SDL2/SDL_image.h>
@@ -75,7 +76,8 @@ class AsteroidsGame: public GameState{
             }
         }
 
-        static bool asteroidOutsideScreen(Sprite *asteroid){
+        static bool asteroidOutsideScreen(std::shared_ptr<Sprite> asteroidPtr){
+            Sprite *asteroid = asteroidPtr.get();
             return outsideScreen(std::make_pair(asteroid->position.first, asteroid->position.second));
         }
 
@@ -135,7 +137,7 @@ class AsteroidsGame: public GameState{
 
                 int asteroidPos = rng() % 800;
                 Sprite *asteroid = new Sprite(asteroidSpritePaths[rng()%asteroidSpritePaths.size()], asteroidPos, -40);
-                asteroids.push_back(asteroid);
+                asteroids.push_back(std::shared_ptr<Sprite> (asteroid));
             }
 
             for (int i=0;i<asteroids.size();i++){
@@ -143,7 +145,7 @@ class AsteroidsGame: public GameState{
                     asteroids[i]->position.second += dt * 400;
                 }
 
-                if (spaceship->collidesWith(asteroids[i]) && !hit){
+                if (spaceship->collidesWith(asteroids[i].get()) && !hit){
                     hit = true;
                     explosion->Start();
                     states->push_back(new StartScreen());
@@ -173,7 +175,7 @@ class AsteroidsGame: public GameState{
             }
             
             for (int i=0;i<asteroids.size();i++){
-                asteroids[i]->Draw();
+                asteroids[i].get()->Draw();
             }
 
             spaceship->Draw();            
@@ -189,7 +191,7 @@ class AsteroidsGame: public GameState{
             SDL_BlitSurface(highScoreText, NULL, Helpers::surface, &scoreRect);
         }
         std::vector<std::pair<double, double>> stars;
-        std::vector<Sprite*> asteroids;
+        std::vector<std::shared_ptr<Sprite>> asteroids;
         std::vector<std::string> asteroidSpritePaths;
         Mix_Music *backMusic;
         std::default_random_engine rng;
