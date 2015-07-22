@@ -34,7 +34,7 @@ bool init_sdl(){
     }
 }
 
-int main(){
+int main(int argc, char *argv[]){
     std::list<GameState*> gameStates;
     gameStates.push_back(new SplashScreen("SplashScreen/", 3, 500));
     gameStates.push_back(new StartScreen());
