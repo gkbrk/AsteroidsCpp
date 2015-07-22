@@ -9,6 +9,7 @@
 
 #include "Helpers.h"
 #include "SoundStore.h"
+#include "DeltaTimer.h"
 #include "GameState.h"
 #include "SplashScreen.h"
 #include "StartScreen.h"
@@ -35,7 +36,7 @@ bool init_sdl(){
 
 int main(){
     std::list<GameState*> gameStates;
-    gameStates.push_back(new SplashScreen("SplashScreen/", 3, 250));
+    gameStates.push_back(new SplashScreen("SplashScreen/", 3, 500));
     gameStates.push_back(new StartScreen());
     gameStates.push_back(new AsteroidsGame());
     if (init_sdl()){
@@ -47,7 +48,12 @@ int main(){
             state->quit = false;
             state->states = &gameStates;
 
-            state->InitState();
+            if (!state->gotoNext){
+                state->InitState();
+            }else{
+                state->gotoNext = false;
+            }
+            DeltaTimer timer;
             while (!state->stateFinished){
                 SDL_Event e;
                 while (SDL_PollEvent(&e) != 0){
@@ -61,11 +67,18 @@ int main(){
                     gameStates.clear();
                     state->stateFinished = true;
                 }
-                state->Update();
+                if (state->gotoNext){
+                    gameStates.push_back(state);
+                    break;
+                }
+                double delta = timer.GetDelta();
+                state->Update(delta);
                 state->Draw();
                 SDL_UpdateWindowSurface(Helpers::window);
             }
-            delete state;
+            if (!state->gotoNext){
+                delete state;
+            }
         }
         SDL_DestroyWindow(Helpers::window);
     }else{

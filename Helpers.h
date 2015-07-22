@@ -29,4 +29,5 @@ namespace Helpers{
 
     static SDL_Window *window;
     static SDL_Surface *surface;
+    static bool menuMusicPlayed = false;
 }

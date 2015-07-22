@@ -31,23 +31,28 @@ class SplashScreen: public GameState{
             }
         }
 
-        void Update(){
-            frame++;
-            if ((frame+1)/(totalFrames/images.size()) >= images.size()){
+        void Update(double dt){
+            frame += dt * 200;
+
+            double timePerPicture = totalFrames/images.size();
+            if (((frame+1)/timePerPicture) >= images.size()){
                 stateFinished = true;
             }
         }
 
         void Draw(){
-            int timePerPicture = totalFrames / images.size();
-            int currentImage = frame/timePerPicture;
-            int alpha = (float)(frame%timePerPicture)/timePerPicture*255;
+            if (!stateFinished){
+                int timePerPicture = totalFrames / images.size();
+                int currentImage = (int)frame/timePerPicture;
+                int alpha = (float)((int)frame%timePerPicture)/timePerPicture*255;
 
-            SDL_SetSurfaceBlendMode(images[currentImage], SDL_BLENDMODE_BLEND);
-            SDL_SetSurfaceAlphaMod(images[currentImage], alpha);
-            SDL_BlitSurface(images[currentImage], NULL, Helpers::surface, NULL);
+                SDL_SetSurfaceBlendMode(images[currentImage], SDL_BLENDMODE_BLEND);
+                SDL_SetSurfaceAlphaMod(images[currentImage], alpha);
+                SDL_BlitSurface(images[currentImage], NULL, Helpers::surface, NULL);
+            }
         }
 
         std::vector<SDL_Surface*> images;
-        int frame, totalFrames;
+        double frame;
+        int totalFrames;
 };

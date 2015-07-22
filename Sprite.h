@@ -31,6 +31,9 @@ class Sprite{
         }
 
         ~Sprite(){
+            #ifdef DEBUGMODE
+                std::cout << "Destroyed Sprite." << std::endl;
+            #endif
             SDL_FreeSurface(image);
         }
 
@@ -96,7 +99,7 @@ class Sprite{
         }
 
         SDL_Surface *image;
-        std::pair<int, int> position;
+        std::pair<double, double> position;
 
         int width, height;
 };

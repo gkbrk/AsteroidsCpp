@@ -17,6 +17,12 @@ class StartScreen: public GameState{
             textPosition = 0;
             textDown = false;
 
+            SoundStore::LoadMusicIfNotLoaded("Sounds/hb_starter_fantasy_field_adventure.wav", "menumusic");
+            if (!Helpers::menuMusicPlayed){
+                Mix_PlayMusic(SoundStore::GetMusic("menumusic"), 0);
+                Helpers::menuMusicPlayed = true;
+            }
+
             TTF_Font *font1 = TTF_OpenFont("Fonts/Amburegul.ttf", 24);
             SDL_Color textColor = {255, 255, 255};
 
@@ -39,7 +45,7 @@ class StartScreen: public GameState{
             }
         }
 
-        void Update(){
+        void Update(double dt){
             frame++;
 
             if (frame % 8 == 0){
@@ -50,17 +56,17 @@ class StartScreen: public GameState{
             }
 
             for (int i=0;i<stars.size();i++){
-                stars[i].second += 2;
+                stars[i].second += dt * 500;
             }
 
             if (frame % 5 == 0){
                 if (textDown){
-                    textPosition += 1;
+                    textPosition += dt * 600;
                     if (textPosition >= 40){
                         textDown = false;
                     }
                 }else{
-                    textPosition -= 1;
+                    textPosition -= dt * 600;
                     if (textPosition <= 0){
                         textDown = true;
                     }
@@ -85,10 +91,10 @@ class StartScreen: public GameState{
             SDL_BlitSurface(start_text, NULL, Helpers::surface, &textRect);
         }
 
-        std::vector<std::pair<short, short>> stars;
+        std::vector<std::pair<double, double>> stars;
         std::default_random_engine rng;
         SDL_Surface *start_text;
         long frame;
-        int textPosition;
+        double textPosition;
         bool textDown;
 };

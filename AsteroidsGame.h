@@ -54,7 +54,7 @@ class AsteroidsGame: public GameState{
             scoreColor = {255, 255, 255};
 
             SoundStore::LoadSoundIfNotLoaded("Sounds/explosion1.wav", "explosion");
-            SoundStore::LoadMusicIfNotLoaded("Sounds/background1.wav", "background");
+            SoundStore::LoadMusicIfNotLoaded("Sounds/hb_starter_fantasy_battle.wav", "background");
 
             if (!Mix_PlayingMusic()){
                 Mix_PlayMusic(SoundStore::GetMusic("background"), -1);
@@ -86,10 +86,19 @@ class AsteroidsGame: public GameState{
 
                 spaceship->SetPosition((x-spaceship->width/2), 500);
             }
+
+            if (e->type == SDL_KEYUP && e->key.keysym.sym == SDLK_r){
+                states->push_back(new StartScreen());
+                gotoNext = true;
+            }
         }
 
-        void Update(){
+        void Update(double dt){
             frame++;
+
+            if (!Mix_PlayingMusic()){
+                Mix_PlayMusic(SoundStore::GetMusic("background"), -1);
+            }
 
             if (frame % 15 == 0 && !hit){
                 score++;
@@ -118,7 +127,7 @@ class AsteroidsGame: public GameState{
 
             for (int i=0;i<stars.size();i++){
                 if (!hit){
-                    stars[i].second += 3;
+                    stars[i].second += dt * 200;
                 }
             }
 
@@ -132,7 +141,7 @@ class AsteroidsGame: public GameState{
 
             for (int i=0;i<asteroids.size();i++){
                 if (!hit){
-                    asteroids[i]->position.second += 1;
+                    asteroids[i]->position.second += dt * 400;
                 }
 
                 if (spaceship->collidesWith(asteroids[i]) && !hit){
@@ -168,11 +177,9 @@ class AsteroidsGame: public GameState{
                 asteroids[i]->Draw();
             }
 
-            spaceship->Draw();
-            
-            explosion->Draw(Helpers::surface, (spaceship->position.first-10), 500);
-
+            spaceship->Draw();            
             flame->Draw(Helpers::surface, (spaceship->position.first), 560);
+            explosion->Draw(Helpers::surface, (spaceship->position.first-10), 500);
 
             SDL_Rect scoreRect;
             scoreRect.x = 5;
@@ -182,7 +189,7 @@ class AsteroidsGame: public GameState{
             scoreRect.y = 25;
             SDL_BlitSurface(highScoreText, NULL, Helpers::surface, &scoreRect);
         }
-        std::vector<std::pair<short, short>> stars;
+        std::vector<std::pair<double, double>> stars;
         std::vector<Sprite*> asteroids;
         std::vector<std::string> asteroidSpritePaths;
         Mix_Music *backMusic;
