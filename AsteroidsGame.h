@@ -28,6 +28,7 @@ class AsteroidsGame: public GameState{
         ~AsteroidsGame(){
             delete scoreText;
             delete highScoreText;
+            delete spaceship;
             
             for (int i=0;i<asteroidSprites.size();i++){
                 SDL_FreeSurface(asteroidSprites[i]);

@@ -19,6 +19,10 @@ class FrameAnimation{
             loops = 1;
             done = false;
             started = false;
+            
+            #ifdef DEBUGMODE
+                std::cout << "Created frame animation." << std::endl;
+            #endif
         }
 
         FrameAnimation(std::string path, int frameCount): FrameAnimation(){

@@ -12,9 +12,13 @@ using namespace Helpers;
 
 class AnimatedSprite: public Sprite{
     public:
-        AnimatedSprite(){}
+        AnimatedSprite(){
+            #ifdef DEBUGMODE
+                std::cout << "New animated sprite." << std::endl;
+            #endif
+        }
 
-        AnimatedSprite(std::string path, int frameCount, int updatesPerFrame){
+        AnimatedSprite(std::string path, int frameCount, int updatesPerFrame): AnimatedSprite(){
             frame = 0;
             currentFrame = 0;
             playing = true;
@@ -37,7 +41,14 @@ class AnimatedSprite: public Sprite{
         }
 
         ~AnimatedSprite(){
+            #ifdef DEBUGMODE
+                std::cout << "Destroying animated sprite." << std::endl;
+            #endif
+
             for (int i=0;i<frames.size();i++){
+                #ifdef DEBUGMODE
+                    std::cout << "Destroying frame " << i << "." << std::endl;
+                #endif
                 SDL_FreeSurface(frames[i]);
             }
         }

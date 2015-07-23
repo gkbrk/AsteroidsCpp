@@ -15,6 +15,11 @@ class Spaceship: public AnimatedSprite{
             rightGunCharge = 0;
         }
 
+        ~Spaceship(){
+            delete flame;
+            delete explosion;
+        }
+
         void Update(double dt){
             if (leftGunCharge >= 1){
                 leftGunCharge -= dt * 75;

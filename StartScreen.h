@@ -10,21 +10,30 @@
 
 #include "GameState.h"
 #include "Text.h"
+#include "Sprite.h"
 
 class StartScreen: public GameState{
     public:
+        ~StartScreen(){
+            delete logo;
+            delete startText;
+        }
+
         void InitState(){
             frame = 0;
             textPosition = 0;
             textDown = false;
 
-            SoundStore::LoadMusicIfNotLoaded("Sounds/hb_starter_fantasy_field_adventure.ogg", "menumusic");
+            SoundStore::LoadMusicIfNotLoaded("Sounds/inspirational_ftl.ogg", "menumusic");
             if (!Helpers::menuMusicPlayed){
                 Mix_PlayMusic(SoundStore::GetMusic("menumusic"), -1);
             }
 
             startText = new Text("Fonts/Amburegul.ttf", 24);
             startText->SetText("Press ENTER to start the game");
+
+            logo = new Sprite("Sprites/logo1.png");
+            logo->SetPosition(400-logo->width/2, 150-logo->height/2);
         }
         
         static bool outsideScreen(std::pair<short, short> coords){
@@ -62,12 +71,12 @@ class StartScreen: public GameState{
             }
 
             if (textDown){
-                textPosition += dt * 150;
+                textPosition += dt * 130;
                 if (textPosition >= 40){
                     textDown = false;
                 }
             }else{
-                textPosition -= dt * 150;
+                textPosition -= dt * 130;
                 if (textPosition <= 0){
                     textDown = true;
                 }
@@ -85,12 +94,14 @@ class StartScreen: public GameState{
                 SDL_FillRect(Helpers::surface, &star_rect, SDL_MapRGB(Helpers::surface->format, 255, 255, 255));
             }
 
+            logo->Draw();
             startText->Draw(170, 300 + textPosition);
         }
 
         std::vector<std::pair<double, double>> stars;
         std::default_random_engine rng;
         Text *startText;
+        Sprite *logo;
         long frame;
         double textPosition;
         bool textDown;

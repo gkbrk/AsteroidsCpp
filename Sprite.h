@@ -8,14 +8,13 @@
 
 #include "Helpers.h"
 
-using namespace Helpers;
-
 class Sprite{
     public:
         Sprite(){
             #ifdef DEBUGMODE
                 std::cout << "Created new Sprite." << std::endl;
             #endif
+            image = NULL;
         }
 
         Sprite(std::string path): Sprite(){
@@ -32,7 +31,7 @@ class Sprite{
 
         ~Sprite(){
             #ifdef DEBUGMODE
-                std::cout << "Destroyed Sprite." << std::endl;
+                std::cout << "Destroyed sprite." << std::endl;
             #endif
             SDL_FreeSurface(image);
         }

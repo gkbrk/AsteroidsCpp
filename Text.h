@@ -12,7 +12,7 @@ class Text{
         Text(std::string fontPath, int fontSize){
             font = TTF_OpenFont(fontPath.c_str(), fontSize);
             textColor = {255, 255, 255};
-            SetText(" ");
+            renderedFont = TTF_RenderText_Solid(font, " ", textColor);
         }
 
         ~Text(){
@@ -24,6 +24,7 @@ class Text{
         }
 
         void SetText(std::string text, SDL_Color color){
+            SDL_FreeSurface(renderedFont);
             renderedFont = TTF_RenderText_Solid(font, text.c_str(), color);
             width = renderedFont->w;
             height = renderedFont->h;
