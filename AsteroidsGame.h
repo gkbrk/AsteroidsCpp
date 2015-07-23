@@ -21,21 +21,17 @@
 #include "GameState.h"
 #include "StartScreen.h"
 #include "FrameAnimation.h"
+#include "Spaceship.h"
 
 class AsteroidsGame: public GameState{
     public:
         ~AsteroidsGame(){
-            delete explosion;
-            delete flame;
-
             delete scoreText;
             delete highScoreText;
             
             for (int i=0;i<asteroidSprites.size();i++){
                 SDL_FreeSurface(asteroidSprites[i]);
             }
-
-            Mix_FreeMusic(backMusic);
 
             Helpers::setHighScore(highscore);
         }
@@ -48,22 +44,23 @@ class AsteroidsGame: public GameState{
 
             rng.seed(time(NULL));
 
-            spaceship = new AnimatedSprite("Sprites/Spaceship/spaceship", 38, 20, 400, 500);
+            spaceship = new Spaceship();
             
             asteroidSpritePaths.push_back("Sprites/asteroid1.png");
             asteroidSpritePaths.push_back("Sprites/asteroid2.png");
             asteroidSpritePaths.push_back("Sprites/asteroid3.png");
+            asteroidSpritePaths.push_back("Sprites/Meteors/meteorBrown0.png");
+            asteroidSpritePaths.push_back("Sprites/Meteors/meteorBrown1.png");
+            asteroidSpritePaths.push_back("Sprites/Meteors/meteorBrown2.png");
+            asteroidSpritePaths.push_back("Sprites/Meteors/meteorBrown3.png");
+            asteroidSpritePaths.push_back("Sprites/Meteors/meteorBrown4.png");
+            asteroidSpritePaths.push_back("Sprites/Meteors/meteorBrown5.png");
+            asteroidSpritePaths.push_back("Sprites/Meteors/meteorBrown6.png");
+            asteroidSpritePaths.push_back("Sprites/Meteors/meteorBrown7.png");
 
+            SoundStore::LoadSoundIfNotLoaded("Sounds/laserLoud.wav", "laser1");
             SoundStore::LoadSoundIfNotLoaded("Sounds/explosion1.wav", "explosion");
-            SoundStore::LoadMusicIfNotLoaded("Sounds/hb_starter_fantasy_battle.wav", "background");
-
-            if (!Mix_PlayingMusic()){
-                Mix_PlayMusic(SoundStore::GetMusic("background"), -1);
-            }
-
-            explosion = new FrameAnimation("Sprites/Explosion/explosion", 23, 1, 9);
-            flame = new FrameAnimation("Sprites/Flame/flame", 4, -1, 15);
-            flame->Start();
+            SoundStore::LoadMusicIfNotLoaded("Sounds/hb_starter_fantasy_battle.ogg", "background");
 
             highscore = Helpers::getHighScore();
 
@@ -79,9 +76,9 @@ class AsteroidsGame: public GameState{
             }
         }
 
-        static bool asteroidOutsideScreen(std::shared_ptr<Sprite> asteroidPtr){
-            Sprite *asteroid = asteroidPtr.get();
-            return outsideScreen(std::make_pair(asteroid->position.first, asteroid->position.second));
+        static bool spriteOutsideScreen(std::shared_ptr<Sprite> spritePtr){
+            Sprite *sprite = spritePtr.get();
+            return outsideScreen(std::make_pair(sprite->position.first, sprite->position.second));
         }
 
         void HandleEvent(SDL_Event *e){
@@ -90,6 +87,33 @@ class AsteroidsGame: public GameState{
                 SDL_GetMouseState(&x, &y);
 
                 spaceship->SetPosition((x-spaceship->width/2), 500);
+            }
+
+            if (e->type == SDL_MOUSEBUTTONDOWN && !hit){
+                score -= 25;
+
+                int offset;
+                if (e->button.button == SDL_BUTTON_LEFT){
+                    if (spaceship->leftGunCharge < 430){
+                        offset = -10;
+                        spaceship->leftGunCharge += 150;
+                    }else{
+                        offset = 0;
+                    }
+                }else{
+                    if (spaceship->rightGunCharge < 430){
+                        offset = 35;
+                        spaceship->rightGunCharge += 150;
+                    }else{
+                        offset = 0;
+                    }
+                }
+
+                if (offset != 0){
+                    Sprite *laser = new Sprite("Sprites/laserRed09.png", spaceship->position.first+offset, 510);
+                    bullets.push_back(std::shared_ptr<Sprite> (laser));
+                    Mix_PlayChannel(-1, SoundStore::GetSound("laser1"), 0);
+                }
             }
 
             if (e->type == SDL_KEYUP && e->key.keysym.sym == SDLK_r){
@@ -133,8 +157,16 @@ class AsteroidsGame: public GameState{
                 }
             }
 
+            for (int i=0;i<bullets.size();i++){
+                bullets[i].get()->position.second -= dt * 400;
+            }
+
+            if (frame % 8 == 0){
+                bullets.erase(std::remove_if(bullets.begin(), bullets.end(), AsteroidsGame::spriteOutsideScreen), bullets.end());
+            }
+
             if (frame % 120 == 0 && !hit){
-                asteroids.erase(std::remove_if(asteroids.begin(), asteroids.end(), AsteroidsGame::asteroidOutsideScreen), asteroids.end()); // Remove old asteroids.
+                asteroids.erase(std::remove_if(asteroids.begin(), asteroids.end(), AsteroidsGame::spriteOutsideScreen), asteroids.end()); // Remove old asteroids.
 
                 int asteroidPos = rng() % 800;
                 Sprite *asteroid = new Sprite(asteroidSpritePaths[rng()%asteroidSpritePaths.size()], asteroidPos, -40);
@@ -148,20 +180,26 @@ class AsteroidsGame: public GameState{
 
                 if (spaceship->collidesWith(asteroids[i].get()) && !hit){
                     hit = true;
-                    explosion->Start();
+                    spaceship->explosion->Start();
                     states->push_back(new StartScreen());
                     states->push_back(new AsteroidsGame());
                     Mix_PlayChannel(-1, SoundStore::GetSound("explosion"), 0);
                 }
 
-                if (hit && explosion->done){
+                for (int i2=0;i2<bullets.size();i2++){
+                    if (bullets[i2].get()->collidesWith(asteroids[i].get())){
+                        asteroids[i].get()->position.second += 900;
+                        bullets[i2].get()->position.second += 900;
+                        score += 60;
+                    }
+                }
+
+                if (hit && spaceship->explosion->done){
                     stateFinished = true;
                 }
             }
 
-            spaceship->Update();
-            explosion->Update();
-            flame->Update();
+            spaceship->Update(dt);
         }
 
         void Draw(){
@@ -179,22 +217,22 @@ class AsteroidsGame: public GameState{
                 asteroids[i].get()->Draw();
             }
 
-            spaceship->Draw();            
-            flame->Draw(Helpers::surface, (spaceship->position.first), 560);
-            explosion->Draw(Helpers::surface, (spaceship->position.first-10), 500);
+            for (int i=0;i<bullets.size();i++){
+                bullets[i].get()->Draw();
+            }
+
+            spaceship->Draw();
 
             scoreText->Draw(5, 5);
             highScoreText->Draw(5, 25);
         }
         std::vector<std::pair<double, double>> stars;
         std::vector<std::shared_ptr<Sprite>> asteroids;
+        std::vector<std::shared_ptr<Sprite>> bullets;
         std::vector<std::string> asteroidSpritePaths;
-        Mix_Music *backMusic;
         std::default_random_engine rng;
-        AnimatedSprite *spaceship;
+        Spaceship *spaceship;
         std::vector<SDL_Surface*> asteroidSprites;
-        FrameAnimation *explosion;
-        FrameAnimation *flame;
         Text *scoreText;
         Text *highScoreText;
         long frame;

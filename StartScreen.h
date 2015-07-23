@@ -18,10 +18,9 @@ class StartScreen: public GameState{
             textPosition = 0;
             textDown = false;
 
-            SoundStore::LoadMusicIfNotLoaded("Sounds/hb_starter_fantasy_field_adventure.wav", "menumusic");
+            SoundStore::LoadMusicIfNotLoaded("Sounds/hb_starter_fantasy_field_adventure.ogg", "menumusic");
             if (!Helpers::menuMusicPlayed){
-                Mix_PlayMusic(SoundStore::GetMusic("menumusic"), 0);
-                Helpers::menuMusicPlayed = true;
+                Mix_PlayMusic(SoundStore::GetMusic("menumusic"), -1);
             }
 
             startText = new Text("Fonts/Amburegul.ttf", 24);
@@ -39,6 +38,10 @@ class StartScreen: public GameState{
         void HandleEvent(SDL_Event *e){
             if (e->type == SDL_KEYUP && e->key.keysym.sym == SDLK_RETURN){
                 stateFinished = true;
+                if (!Helpers::menuMusicPlayed){
+                    Mix_FadeOutMusic(3000);
+                    Helpers::menuMusicPlayed = true;
+                }
             }else if (e->type == SDL_KEYUP && e->key.keysym.sym == SDLK_ESCAPE){
                 quit = true;
             }
@@ -58,17 +61,15 @@ class StartScreen: public GameState{
                 stars[i].second += dt * 500;
             }
 
-            if (frame % 5 == 0){
-                if (textDown){
-                    textPosition += dt * 600;
-                    if (textPosition >= 40){
-                        textDown = false;
-                    }
-                }else{
-                    textPosition -= dt * 600;
-                    if (textPosition <= 0){
-                        textDown = true;
-                    }
+            if (textDown){
+                textPosition += dt * 150;
+                if (textPosition >= 40){
+                    textDown = false;
+                }
+            }else{
+                textPosition -= dt * 150;
+                if (textPosition <= 0){
+                    textDown = true;
                 }
             }
         }

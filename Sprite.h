@@ -39,6 +39,8 @@ class Sprite{
 
         virtual void InitSprite() {}
         virtual void Update() {}
+        virtual void Update(double dt) {}
+        virtual void HandleEvent(SDL_Event *e){}
         void Draw() {
             SDL_Rect spriteRect;
             spriteRect.x = position.first;
