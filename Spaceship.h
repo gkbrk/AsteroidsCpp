@@ -7,17 +7,21 @@
 
 class Spaceship: public AnimatedSprite{
     public:
-        Spaceship(): AnimatedSprite("Sprites/Spaceship/spaceship", 38, 20, 400, 500){
+        Spaceship(): AnimatedSprite("Sprites/Spaceship/spaceship", 38, 20, 200, 500){
             flame = new AnimatedSprite("Sprites/Flame/flame", 4, 15);
             explosion = new FrameAnimation("Sprites/Explosions/Explosion0/explosion", 23, 1, 15);
+            shield = new Sprite("Sprites/shield.png");
 
             leftGunCharge = 0;
             rightGunCharge = 0;
+
+            shielded = false;
         }
 
         ~Spaceship(){
             delete flame;
             delete explosion;
+            delete shield;
         }
 
         void Update(double dt){
@@ -29,11 +33,14 @@ class Spaceship: public AnimatedSprite{
                 rightGunCharge -= dt * 75;
             }
 
-            AnimatedSprite::Update();
+            AnimatedSprite::Update(dt);
             flame->SetPosition(position.first, position.second+60);
-            flame->Update();
+            flame->Update(dt);
 
             explosion->Update();
+
+            shield->SetPosition(position.first-20, position.second);
+            shield->Update();
         }
 
         void Draw(){
@@ -54,11 +61,18 @@ class Spaceship: public AnimatedSprite{
             AnimatedSprite::Draw();
             flame->Draw();
             explosion->Draw(Helpers::surface, position.first-20, position.second);
+
+            if (shielded){
+                shield->Draw();
+            }
         }
 
         AnimatedSprite *flame;
         FrameAnimation *explosion;
+        Sprite *shield;
 
         double leftGunCharge;
         double rightGunCharge;
+
+        bool shielded;
 };

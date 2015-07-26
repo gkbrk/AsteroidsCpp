@@ -18,12 +18,12 @@ class AnimatedSprite: public Sprite{
             #endif
         }
 
-        AnimatedSprite(std::string path, int frameCount, int updatesPerFrame): AnimatedSprite(){
+        AnimatedSprite(std::string path, int frameCount, int speed): AnimatedSprite(){
             frame = 0;
             currentFrame = 0;
             playing = true;
             
-            this->updatesPerFrame = updatesPerFrame;
+            this->speed = speed;
 
             for (int i=0;i<frameCount;i++){
                 std::ostringstream pathStream;
@@ -35,7 +35,7 @@ class AnimatedSprite: public Sprite{
             height = frames[0]->h;
         }
 
-        AnimatedSprite(std::string path, int frameCount, int updatesPerFrame, int x, int y): AnimatedSprite(path, frameCount, updatesPerFrame){
+        AnimatedSprite(std::string path, int frameCount, int speed, int x, int y): AnimatedSprite(path, frameCount, speed){
             position.first = x;
             position.second = y;
         }
@@ -53,14 +53,11 @@ class AnimatedSprite: public Sprite{
             }
         }
 
-        void Update(){
+        void Update(double dt){
             if (playing){
-                frame++;
-
-                if (frame % updatesPerFrame == 0){
-                    currentFrame++;
-                    currentFrame = currentFrame % frames.size();
-                }
+                frame += dt * speed;
+                
+                currentFrame = (int)frame % frames.size();
             }
         }
 
@@ -77,7 +74,7 @@ class AnimatedSprite: public Sprite{
 
         std::vector<SDL_Surface*> frames;
         int currentFrame;
-        int updatesPerFrame;
-        long frame;
+        int speed;
+        double frame;
         bool playing;
 };

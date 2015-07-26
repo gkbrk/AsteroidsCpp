@@ -22,6 +22,7 @@
 #include "StartScreen.h"
 #include "FrameAnimation.h"
 #include "Spaceship.h"
+#include "Powerup.h"
 
 class AsteroidsGame: public GameState{
     public:
@@ -61,6 +62,9 @@ class AsteroidsGame: public GameState{
 
             SoundStore::LoadSoundIfNotLoaded("Sounds/laserLoud.wav", "laser1");
             SoundStore::LoadSoundIfNotLoaded("Sounds/explosion1.wav", "explosion");
+            SoundStore::LoadSoundIfNotLoaded("Sounds/unlimitedAmmo.wav", "unlimitedAmmo");
+            SoundStore::LoadSoundIfNotLoaded("Sounds/shieldhit.wav", "shieldhit");
+            SoundStore::LoadSoundIfNotLoaded("Sounds/shields.wav", "shields");
             SoundStore::LoadMusicIfNotLoaded("Sounds/hb_starter_fantasy_battle.ogg", "background");
 
             highscore = Helpers::getHighScore();
@@ -70,7 +74,7 @@ class AsteroidsGame: public GameState{
         }
 
         static bool outsideScreen(std::pair<short, short> coords){
-            if (coords.first<0 || coords.first>800 || coords.second<0 || coords.second>600){
+            if (coords.first<0 || coords.first>800 || coords.second<-100 || coords.second>600){
                 return true;
             }else{
                 return false;
@@ -128,6 +132,7 @@ class AsteroidsGame: public GameState{
 
             if (!Mix_PlayingMusic()){
                 Mix_PlayMusic(SoundStore::GetMusic("background"), -1);
+                Mix_VolumeMusic(95);
             }
 
             score += dt * 30;
@@ -162,16 +167,52 @@ class AsteroidsGame: public GameState{
                 bullets[i].get()->position.second -= dt * 400;
             }
 
+            for (int i=0;i<powerUps.size();i++){
+                if (!hit){
+                    powerUps[i].get()->position.second += dt * 300;
+                }
+
+                if (spaceship->collidesWith(powerUps[i].get())){
+                    if (powerUps[i].get()->type == 0){
+                        Mix_PlayChannel(-1, SoundStore::GetSound("unlimitedAmmo"), 0);
+
+                        spaceship->leftGunCharge = -2000;
+                        spaceship->rightGunCharge = -2000;
+                    }else if (powerUps[i].get()->type == 1){
+                        Mix_PlayChannel(-1, SoundStore::GetSound("shields"), 0);
+                        spaceship->shielded = true;
+                    }
+                    powerUps[i].get()->position.second = 900;
+                }
+            }
+
             if (frame % 8 == 0){
                 bullets.erase(std::remove_if(bullets.begin(), bullets.end(), AsteroidsGame::spriteOutsideScreen), bullets.end());
             }
 
-            if (frame % 120 == 0 && !hit){
+            if (frame%110 == 0 && !hit){
                 asteroids.erase(std::remove_if(asteroids.begin(), asteroids.end(), AsteroidsGame::spriteOutsideScreen), asteroids.end()); // Remove old asteroids.
 
                 int asteroidPos = rng() % 800;
                 Sprite *asteroid = new Sprite(asteroidSpritePaths[rng()%asteroidSpritePaths.size()], asteroidPos, -40);
                 asteroids.push_back(std::shared_ptr<Sprite> (asteroid));
+            }
+
+            if (frame%1000 == 0 && rng()%7 == 0){
+                powerUps.erase(std::remove_if(powerUps.begin(), powerUps.end(), AsteroidsGame::spriteOutsideScreen), powerUps.end());
+
+                int powerupType = rng()%2;
+
+                Powerup *powerUp;
+                if (powerupType == 0){
+                    powerUp = new Powerup("Sprites/powerupBolt.png", rng()%800, -20);
+                    powerUp->type = powerupType;
+                }else if (powerupType == 1){
+                    powerUp = new Powerup("Sprites/powerupShield.png", rng()%800, -20);
+                    powerUp->type = powerupType;
+                }
+
+                powerUps.push_back(std::shared_ptr<Powerup> (powerUp));
             }
 
             for (int i=0;i<asteroids.size();i++){
@@ -180,11 +221,17 @@ class AsteroidsGame: public GameState{
                 }
 
                 if (spaceship->collidesWith(asteroids[i].get()) && !hit){
-                    hit = true;
-                    spaceship->explosion->Start();
-                    states->push_back(new StartScreen());
-                    states->push_back(new AsteroidsGame());
-                    Mix_PlayChannel(-1, SoundStore::GetSound("explosion"), 0);
+                    if (!spaceship->shielded){
+                        hit = true;
+                        spaceship->explosion->Start();
+                        states->push_back(new StartScreen());
+                        states->push_back(new AsteroidsGame());
+                        Mix_PlayChannel(-1, SoundStore::GetSound("explosion"), 0);
+                    }else{
+                        Mix_PlayChannel(-1, SoundStore::GetSound("shieldhit"), 0);
+                        spaceship->shielded = false;
+                        asteroids[i].get()->position.second = 900;
+                    }
                 }
 
                 for (int i2=0;i2<bullets.size();i2++){
@@ -222,6 +269,10 @@ class AsteroidsGame: public GameState{
                 bullets[i].get()->Draw();
             }
 
+            for (int i=0;i<powerUps.size();i++){
+                powerUps[i].get()->Draw();
+            }
+
             spaceship->Draw();
 
             scoreText->Draw(5, 5);
@@ -230,6 +281,7 @@ class AsteroidsGame: public GameState{
         std::vector<std::pair<double, double>> stars;
         std::vector<std::shared_ptr<Sprite>> asteroids;
         std::vector<std::shared_ptr<Sprite>> bullets;
+        std::vector<std::shared_ptr<Powerup>> powerUps;
         std::vector<std::string> asteroidSpritePaths;
         std::default_random_engine rng;
         Spaceship *spaceship;
