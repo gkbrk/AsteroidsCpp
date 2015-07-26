@@ -17,6 +17,7 @@ class StartScreen: public GameState{
         ~StartScreen(){
             delete logo;
             delete startText;
+            delete fullScreenText;
         }
 
         void InitState(){
@@ -31,6 +32,9 @@ class StartScreen: public GameState{
 
             startText = new Text("Fonts/Amburegul.ttf", 24);
             startText->SetText("Press ENTER to start the game");
+
+            fullScreenText = new Text("Fonts/Beon-Regular.ttf", 17);
+            fullScreenText->SetText("Press F to toggle fullscreen!"); 
 
             logo = new Sprite("Sprites/logo1.png");
             logo->SetPosition(400-logo->width/2, 150-logo->height/2);
@@ -53,6 +57,9 @@ class StartScreen: public GameState{
                 }
             }else if (e->type == SDL_KEYUP && e->key.keysym.sym == SDLK_ESCAPE){
                 quit = true;
+            }else if (e->type == SDL_KEYUP && e->key.keysym.sym == SDLK_f){
+                SDL_SetWindowFullscreen(Helpers::window, SDL_GetWindowFlags(Helpers::window) ^ SDL_WINDOW_FULLSCREEN);
+                Helpers::surface = SDL_GetWindowSurface(Helpers::window);
             }
         }
 
@@ -96,11 +103,13 @@ class StartScreen: public GameState{
 
             logo->Draw();
             startText->Draw(170, 300 + textPosition);
+            fullScreenText->Draw(800-fullScreenText->width-20, 600-fullScreenText->height-20);
         }
 
         std::vector<std::pair<double, double>> stars;
         std::default_random_engine rng;
         Text *startText;
+        Text *fullScreenText;
         Sprite *logo;
         long frame;
         double textPosition;
